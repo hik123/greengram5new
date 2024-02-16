@@ -2,6 +2,10 @@ package com.green.greengram4.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.ToString;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @Entity
@@ -21,5 +25,10 @@ public class FeedEntity extends BaseEntity{
 
     @Column(length = 30)
     private String location;
+
+    //양방향처리?
+    @ToString.Exclude //toString 찍었을때 feedPicsEntityList빼줌?
+    @OneToMany(mappedBy = "feedEntity",cascade = CascadeType.PERSIST) //mappedBy>> 있으면 테이블 생성안됨, cascade 영속성전이
+    private List<FeedPicsEntity> feedPicsEntityList = new ArrayList();
 
 }

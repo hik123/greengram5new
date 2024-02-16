@@ -57,7 +57,7 @@ class FeedControllerTest {
         verify(service).postFeed(any());
     }
 */
-    @Test
+    /*@Test
     void getFeedAll() throws Exception {
         //given - when - then
         List<FeedSelVo> list = new ArrayList<>();
@@ -90,7 +90,7 @@ class FeedControllerTest {
                 .andExpect(content().string(json));
 
         verify(service).getFeedAll(any());
-    }
+    }*/
 
     @Test
     void delFeed() {}

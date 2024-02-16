@@ -16,12 +16,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.checkerframework.checker.units.qual.A;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Service
@@ -221,17 +223,24 @@ public class UserService {
         UserFollowIds ids = new UserFollowIds();
         ids.setFromIuser(dto.getFromIuser());
         ids.setToIuser(dto.getToIuser());
-        Optional<UserFollowEntity> optEntity = followRepository.findById(ids);
-        UserFollowEntity entity = optEntity.isPresent() ? optEntity.get() : null;
 
-        if(entity == null) {
-            UserFollowEntity saveUserFollowEntity = new UserFollowEntity();
-            saveUserFollowEntity.setUserFollowIds(ids);
-            followRepository.save(saveUserFollowEntity);
-        } else {
-            followRepository.delete(entity);
-        }
-        return new ResVo(Const.SUCCESS);
+        AtomicInteger atomic = new AtomicInteger(Const.FAIL);
+        followRepository
+                .findById(ids)
+                .ifPresentOrElse(
+                        entity -> followRepository.delete(entity)
+                        , () -> {
+                            atomic.set(Const.SUCCESS);
+                            UserFollowEntity saveUserFollowEntity = new UserFollowEntity();
+                            saveUserFollowEntity.setUserFollowIds(ids);
+                            UserEntity fromUserEntity = repository.getReferenceById((long)authenticationFacade.getLoginUserPk()); //영속성?
+                            UserEntity toUserEntity = repository.getReferenceById(dto.getToIuser());
+                            saveUserFollowEntity.setFromUserEntity(fromUserEntity);
+                            saveUserFollowEntity.setToUserEntity(toUserEntity);
+                            followRepository.save(saveUserFollowEntity);
+                        }
+                );
+        return new ResVo(atomic.get());
     }
 
     /*public ResVo toggleFollow(UserFollowDto dto) {
