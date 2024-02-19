@@ -26,7 +26,7 @@ public class UserEntity extends  BaseEntity {
     private Long iuser;
 
     @Column(length = 10, name = "provider_type", nullable = false)  // / name ="" db랑 이름다를때 사용/ nullable = false <<not null
-    @Enumerated(value = EnumType.STRING)
+    @Enumerated(value = EnumType.STRING) //enum에 문자열 값이 들어갔으면 좋겠다
     @ColumnDefault("'LOCAL'")
     private ProviderTypeEnum providerType;
 

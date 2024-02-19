@@ -27,7 +27,7 @@ public class FeedEntity extends BaseEntity{
     private String location;
 
     //양방향처리?
-    @ToString.Exclude //toString 찍었을때 feedPicsEntityList빼줌?
+    @ToString.Exclude //toString 찍었을때 제외 // 제외 안하면 양방향이라 무한루프
     @OneToMany(mappedBy = "feedEntity",cascade = CascadeType.PERSIST) //mappedBy>> 있으면 테이블 생성안됨, cascade 영속성전이
     private List<FeedPicsEntity> feedPicsEntityList = new ArrayList();
 

@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,6 +32,7 @@ public class FeedService {
     private final FeedCommentMapper commentMapper;
     private final FeedRepository feedRepository;
     private final UserRepository userRepository;
+    private final FeedCommentRepository commentRepository;
     private final AuthenticationFacade authenticationFacade;
     private final MyFileUtils myFileUtils;
 
@@ -95,15 +97,50 @@ public class FeedService {
 
 
     public List<FeedSelVo> getFeedAll(FeedSelDto dto, Pageable pageable) {
-        List<FeedSelVo> list = null;
+        List<FeedEntity> feedEntityList = null;
         if(dto.getIsFavList() == 0 && dto.getTargetIuser() >0) {
             //feedRepository.findAllByUserEntityOrderByIfeedDesc(null, pageable)
             UserEntity userEntity = new UserEntity();
             userEntity.setIuser((long)dto.getTargetIuser());
-            List<FeedEntity> feedEntityList = feedRepository.findAllByUserEntityOrderByIfeedDesc(userEntity, pageable);
+
+            feedEntityList = feedRepository.findAllByUserEntityOrderByIfeedDesc(userEntity, pageable);
 
         }
-        System.out.println("!!!!!");
+
+        return feedEntityList == null
+                ? new ArrayList()
+                : feedEntityList.stream().map(item -> {
+
+                    List<FeedCommentSelVo> cmtList = commentRepository.findAllTop4ByFeedEntity(item)
+                                                                    .stream()
+                                                                    .map(cmt ->
+                                    FeedCommentSelVo.builder()
+                                            .ifeedComment(cmt.getIFeedComment().intValue())
+                                            .comment(cmt.getComment())
+                                            .createdAt(cmt.getCreatedAt().toString())
+                                            .writerIuser(cmt.getUserEntity().getIuser().intValue())
+                                            .writerNm(cmt.getUserEntity().getNm())
+                                            .writerPic(cmt.getUserEntity().getPic())
+                                            .build()
+                    ).collect(Collectors.toList());
+
+
+                    UserEntity userEntity = item.getUserEntity();
+                    return FeedSelVo.builder()
+                            .ifeed(item.getIfeed().intValue())
+                            .contents(item.getContents())
+                            .location(item.getLocation())
+                            .createdAt(item.getCreatedAt().toString())
+                            .writerIuser(item.getUserEntity().getIuser().intValue())
+                            .writerNm(userEntity.getNm())
+                            .writerPic(userEntity.getPic())
+                            .comments(cmtList)
+                            .build();
+                }
+        ).collect(Collectors.toList());
+
+
+        /*System.out.println("!!!!!");
         list = mapper.selFeedAll(dto);
 
         FeedCommentSelDto fcDto = new FeedCommentSelDto();
@@ -123,7 +160,7 @@ public class FeedService {
                 comments.remove(comments.size() - 1);
             }
         }
-        return list;
+        return list;*/
     }
 
     /*public List<FeedSelVo> getFeedAll(FeedSelDto dto) {
