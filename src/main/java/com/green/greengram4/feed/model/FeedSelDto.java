@@ -9,20 +9,21 @@ import lombok.Data;
 @Schema(title = "피드 리스트")
 public class FeedSelDto {
 
-    @JsonIgnore
+    /*@JsonIgnore
     @Schema(title = "페이지", defaultValue = "1")
-    private int page;
+    private int page;*/
 
+    @JsonIgnore
     @Schema(title = "로그인한 유저pk")
-    private int loginedIuser;
+    private long loginedIuser;
 
     @Schema(title = "프로필 주인 유저pk", required = false)
-    private int targetIuser;
+    private long targetIuser;
 
     @Schema(title = "좋아요 Feed 리스트 여부", required = false)
     private int isFavList;
 
-    @JsonIgnore
+   /* @JsonIgnore
     private int startIdx;
 
     @JsonIgnore
@@ -31,4 +32,4 @@ public class FeedSelDto {
     public void setPage(int page) {
         this.startIdx = (page - 1) * rowCount;
     }
-}
+*/}

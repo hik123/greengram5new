@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class FeedCommentSelVo {
+    private int ifeed;
     private int ifeedComment;
     private String comment;
     private String createdAt;

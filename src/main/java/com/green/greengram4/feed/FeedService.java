@@ -3,10 +3,7 @@ package com.green.greengram4.feed;
 import com.green.greengram4.common.Const;
 import com.green.greengram4.common.MyFileUtils;
 import com.green.greengram4.common.ResVo;
-import com.green.greengram4.entity.FeedEntity;
-import com.green.greengram4.entity.FeedFavIds;
-import com.green.greengram4.entity.FeedPicsEntity;
-import com.green.greengram4.entity.UserEntity;
+import com.green.greengram4.entity.*;
 import com.green.greengram4.exception.FeedErrorCode;
 import com.green.greengram4.exception.RestApiException;
 import com.green.greengram4.feed.model.*;
@@ -100,6 +97,46 @@ public class FeedService {
 
     @Transactional
     public List<FeedSelVo> getFeedAll(FeedSelDto dto, Pageable pageable) {
+       long loginIuser = authenticationFacade.getLoginUserPk();
+        dto.setLoginedIuser(loginIuser);
+        List<FeedEntity> list = feedRepository.selFeedAll(dto, pageable);
+
+        List<FeedPicsEntity> picList = feedRepository.selFeedPicsAll(list);
+        List<FeedFavEntity> favList = feedRepository.selFeedFavAllByMe(list, loginIuser);
+        List<FeedCommentSelVo> cmtList = commentMapper.selFeedCommentEachTop4(list);
+
+
+        return list.stream().map(item -> {        //{}
+                List<FeedCommentSelVo> eachCommentList = cmtList.stream()
+                        .filter(cmt -> cmt.getIfeed() == item.getIfeed()).collect(Collectors.toList());
+
+                int isMoreComment = 0;
+                if(eachCommentList.size() == 4) {
+                    isMoreComment = 1;
+                    eachCommentList.remove(eachCommentList.size() - 1);
+                }
+
+                return FeedSelVo.builder()
+                        .ifeed(item.getIfeed().intValue())
+                        .location(item.getLocation())
+                        .contents(item.getContents())
+                        .createdAt(item.getCreatedAt().toString())
+                        .writerIuser(item.getUserEntity().getIuser().intValue())
+                        .writerNm(item.getUserEntity().getNm())
+                        .writerPic(item.getUserEntity().getPic())
+                        .pics(picList.stream()
+                                .filter(pic -> pic.getFeedEntity().getIfeed() == item.getIfeed())
+                                .map(pic -> pic.getPic())
+                                .collect(Collectors.toList())
+                        )
+                        .isFav(favList.stream().anyMatch(fav -> fav.getFeedEntity().getIfeed() == item.getIfeed()) ? 1 : 0) //하나라도 맞으면 true        //fuctionalInterface
+                        .build();
+        }
+        ).collect(Collectors.toList());
+    }
+
+    /*@Transactional
+    public List<FeedSelVo> getFeedAll(FeedSelDto dto, Pageable pageable) {
         List<FeedEntity> feedEntityList = null;
         if(dto.getIsFavList() == 0 && dto.getTargetIuser() >0) {
             //feedRepository.findAllByUserEntityOrderByIfeedDesc(null, pageable)
@@ -118,7 +155,7 @@ public class FeedService {
                     feedFavIds.setIuser((long)authenticationFacade.getLoginUserPk());
                     feedFavIds.setIfeed(item.getIfeed());
                     int isFav = feedFavRepository.findById(feedFavIds).isPresent() ? 1 : 0;
-
+                                                 //findById리턴타입 옵셔널, null일 수 없음,  isPresent 존재하면true 널이면false
                     List<FeedPicsEntity> picList = item.getFeedPicsEntityList();
                        List<String> pic = picList.stream().map( picss -> picss.getPic()).collect(Collectors.toList());
 
@@ -153,7 +190,7 @@ public class FeedService {
                             .isFav(isFav)
                             .build();
                 }
-        ).collect(Collectors.toList());
+        ).collect(Collectors.toList());*/
 
 
         /*System.out.println("!!!!!");
@@ -176,8 +213,8 @@ public class FeedService {
                 comments.remove(comments.size() - 1);
             }
         }
-        return list;*/
-    }
+        return list;
+    }*/
 
     /*public List<FeedSelVo> getFeedAll(FeedSelDto dto) {
         System.out.println("!!!!!");
